@@ -27,10 +27,12 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.HttpsURLConnection;
 
 import dm.audiostreamer.MediaMetaData;
+import dm.audiostreamerdemo.util.MusicLibrary;
 
 public class MusicBrowser {
 
@@ -44,13 +46,12 @@ public class MusicBrowser {
 
         final AsyncTask<Void, Void, Void> loadTask = new AsyncTask<Void, Void, Void>() {
             String[] resp = {"", ""};
-            List<MediaMetaData> listMusic = new ArrayList<>();
 
             @Override
             protected Void doInBackground(Void... voids) {
                 //resp = getDataResponse();
                 String response = loadJSONFromAsset(context);
-                listMusic = getMusicList(response, "music");
+                getMusicList(response, "music");
                 return null;
             }
 
@@ -58,8 +59,8 @@ public class MusicBrowser {
             protected void onPostExecute(Void aVoid) {
                 super.onPostExecute(aVoid);
 
-                if (loaderListener != null && listMusic != null && listMusic.size() >= 1) {
-                    loaderListener.onLoadSuccess(listMusic);
+                if (loaderListener != null)  {
+                    loaderListener.onLoadSuccess();
                 } else {
                     loaderListener.onLoadFailed();
                 }
@@ -91,16 +92,15 @@ public class MusicBrowser {
             for (int i = 0; i < array.length(); i++) {
                 MediaMetaData infoData = new MediaMetaData();
                 JSONObject musicObj = array.getJSONObject(i);
-                infoData.setMediaId(musicObj.optString("id"));
-                infoData.setMediaUrl(musicObj.optString("site") + musicObj.optString("source"));
-                infoData.setMediaTitle(musicObj.optString("title"));
-                infoData.setMediaArtist(musicObj.optString("artist"));
-                infoData.setMediaAlbum(musicObj.optString("album"));
-                infoData.setMediaComposer(musicObj.optString(""));
-                infoData.setMediaDuration(musicObj.optString("duration"));
-                infoData.setMediaArt(musicObj.optString("site") + musicObj.optString("image"));
-                listArticle.add(infoData);
-            }
+                MusicLibrary.createMediaMetadataCompat((musicObj.optString("id")),
+                        musicObj.optString("title"),
+                        musicObj.optString("artist"),
+                        musicObj.optString("album"),
+                        musicObj.optString("genre"),
+                        musicObj.optLong("duration"),
+                        TimeUnit.SECONDS,
+                        musicObj.optString("site") + musicObj.optString("source"));
+                }
         } catch (JSONException e) {
             e.printStackTrace();
         } catch (JsonSyntaxException e) {

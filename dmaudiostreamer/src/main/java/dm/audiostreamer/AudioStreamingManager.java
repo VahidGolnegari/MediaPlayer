@@ -231,6 +231,7 @@ public class AudioStreamingManager extends StreamingManager {
         audioPlayback.stop(true);
     }
 
+
     static class MyStatusCallback implements PlaybackListener.Callback {
         @Override
         public void onCompletion() {
