@@ -41,8 +41,11 @@ public class MusicBrowser {
     public static String RESPONSE_CODE_SUCCESS = "200";
     public static String RESPONSE_CODE_CONNECTION_TIMEOUT = "9001";
     public static String RESPONSE_CODE_SOCKET_TIMEOUT = "903";
+    private static List<MediaMetaData> musicList = new ArrayList<>();
 
     public static void loadMusic(final Context context, final MusicLoaderListener loaderListener) {
+
+
 
         final AsyncTask<Void, Void, Void> loadTask = new AsyncTask<Void, Void, Void>() {
             String[] resp = {"", ""};
@@ -51,7 +54,7 @@ public class MusicBrowser {
             protected Void doInBackground(Void... voids) {
                 //resp = getDataResponse();
                 String response = loadJSONFromAsset(context);
-                getMusicList(response, "music");
+                musicList = getMusicList(response, "music");
                 return null;
             }
 
@@ -60,7 +63,7 @@ public class MusicBrowser {
                 super.onPostExecute(aVoid);
 
                 if (loaderListener != null)  {
-                    loaderListener.onLoadSuccess();
+                    loaderListener.onLoadSuccess(musicList);
                 } else {
                     loaderListener.onLoadFailed();
                 }
@@ -92,7 +95,8 @@ public class MusicBrowser {
             for (int i = 0; i < array.length(); i++) {
                 MediaMetaData infoData = new MediaMetaData();
                 JSONObject musicObj = array.getJSONObject(i);
-                MusicLibrary.createMediaMetadataCompat((musicObj.optString("id")),
+                MusicLibrary.createMediaMetadataCompat((
+                        musicObj.optString("id")),
                         musicObj.optString("title"),
                         musicObj.optString("artist"),
                         musicObj.optString("album"),
@@ -100,7 +104,15 @@ public class MusicBrowser {
                         musicObj.optLong("duration"),
                         TimeUnit.SECONDS,
                         musicObj.optString("site") + musicObj.optString("source"));
-                }
+                infoData.setMediaId( musicObj.optString("id"));
+                infoData.setMediaTitle(musicObj.optString("title"));
+                infoData.setMediaArtist(musicObj.optString("artist"));
+                infoData.setMediaAlbum(musicObj.optString("album"));
+                infoData.setMediaUrl(musicObj.optString("site") + musicObj.optString("source"));
+                infoData.setMediaDuration(musicObj.optString("duration"));
+                listArticle.add(infoData);
+
+            }
         } catch (JSONException e) {
             e.printStackTrace();
         } catch (JsonSyntaxException e) {

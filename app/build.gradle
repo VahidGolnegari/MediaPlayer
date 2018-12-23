@@ -24,6 +24,8 @@ dependencies {
     compile 'com.github.dibakarece:dmaudiostreamer:v1.0.4'
     compile'com.nineoldandroids:library:2.4.0'
     compile 'com.android.support:appcompat-v7:26.1.0'
+    compile 'com.android.support:support-v13:24.2.1'
+
     compile 'com.google.code.gson:gson:2.6.2'
 
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {

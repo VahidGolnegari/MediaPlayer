@@ -6,15 +6,22 @@
 package dm.audiostreamerdemo.activity;
 
 import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.RemoteException;
+import android.support.v4.media.MediaBrowserCompat;
+import android.support.v4.media.MediaMetadataCompat;
+import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.format.DateUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -42,6 +49,7 @@ import dm.audiostreamerdemo.R;
 import dm.audiostreamerdemo.adapter.AdapterMusic;
 import dm.audiostreamerdemo.network.MusicBrowser;
 import dm.audiostreamerdemo.network.MusicLoaderListener;
+import dm.audiostreamerdemo.service.MediaBrowserService;
 import dm.audiostreamerdemo.slidinguppanel.SlidingUpPanelLayout;
 import dm.audiostreamerdemo.widgets.LineProgress;
 import dm.audiostreamerdemo.widgets.PlayPauseView;
@@ -85,13 +93,26 @@ public class MusicActivity extends AppCompatActivity implements CurrentSessionCa
     private MediaMetaData currentSong;
     private List<MediaMetaData> listOfSongs = new ArrayList<MediaMetaData>();
 
+    //
+    private MediaBrowserCompat mMediaBrowserCompat;
+    private MediaControllerCompat mMediaControllerCompat;
+    private boolean isMediaConnected = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_music);
 
         this.context = MusicActivity.this;
-        configAudioStreamer();
+
+        mMediaBrowserCompat = new MediaBrowserCompat(this, new ComponentName(this, MediaBrowserService.class),
+                mMediaBrowserCompatConnectionCallback, getIntent().getExtras());
+
+        mMediaBrowserCompat.connect();
+
+
+
+//        configAudioStreamer();
         uiInitialization();
         loadMusicData();
     }
@@ -258,10 +279,11 @@ public class MusicActivity extends AppCompatActivity implements CurrentSessionCa
     }
 
     private void playSong(MediaMetaData media) {
-        if (streamingManager != null) {
-            streamingManager.onPlay(media);
-            showMediaInfo(media);
-        }
+
+//        if (streamingManager != null) {
+//            streamingManager.onPlay(media);
+//            showMediaInfo(media);
+//        }
     }
 
     private void showMediaInfo(MediaMetaData media) {
@@ -402,8 +424,8 @@ public class MusicActivity extends AppCompatActivity implements CurrentSessionCa
                 listOfSongs = listMusic;
                 adapterMusic.refresh(listMusic);
 
-                configAudioStreamer();
-                checkAlreadyPlaying();
+//                configAudioStreamer();
+//                checkAlreadyPlaying();
             }
 
             @Override
@@ -524,4 +546,57 @@ public class MusicActivity extends AppCompatActivity implements CurrentSessionCa
         PendingIntent mPendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
         return mPendingIntent;
     }
+
+    ///
+
+    private MediaBrowserCompat.ConnectionCallback mMediaBrowserCompatConnectionCallback = new MediaBrowserCompat.ConnectionCallback() {
+
+        @Override
+        public void onConnected() {
+            super.onConnected();
+            isMediaConnected = true;
+            Log.d("musicBrowserConnected","true");
+            try {
+                mMediaControllerCompat = new MediaControllerCompat(MusicActivity.this, mMediaBrowserCompat.getSessionToken());
+                mMediaControllerCompat.registerCallback(mMediaControllerCompatCallback);
+
+            } catch( RemoteException e ) {
+
+            }
+        }
+    };
+
+    private MediaControllerCompat.Callback mMediaControllerCompatCallback = new MediaControllerCompat.Callback() {
+
+        @Override
+        public void onPlaybackStateChanged(PlaybackStateCompat state) {
+            super.onPlaybackStateChanged(state);
+
+            switch (state.getState()) {
+
+                case PlaybackStateCompat.STATE_PAUSED:
+
+                    break;
+
+                case PlaybackStateCompat.STATE_PLAYING:
+
+                    break;
+
+                case PlaybackStateCompat.STATE_STOPPED:
+
+                    break;
+
+
+            }
+
+        }
+
+        @Override
+        public void onMetadataChanged(MediaMetadataCompat metadata) {
+            super.onMetadataChanged(metadata);
+            Log.d("onMetaData_title",metadata.getDescription() + " ");
+        }
+
+
+    };
 }

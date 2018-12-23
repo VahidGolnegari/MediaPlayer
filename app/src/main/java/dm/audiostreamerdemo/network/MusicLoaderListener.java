@@ -11,7 +11,7 @@ import dm.audiostreamer.MediaMetaData;
 
 public interface MusicLoaderListener {
 
-    void onLoadSuccess();
+    void onLoadSuccess(List<MediaMetaData> listMusic);
 
     void onLoadFailed();
 
