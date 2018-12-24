@@ -6,6 +6,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.MediaMetadataCompat;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -45,6 +46,7 @@ public class MusicLibrary {
     public static List<MediaBrowserCompat.MediaItem> getMediaItems() {
         List<MediaBrowserCompat.MediaItem> result = new ArrayList<>();
         for (MediaMetadataCompat metadata : music.values()) {
+
             result.add(
                     new MediaBrowserCompat.MediaItem(
                             metadata.getDescription(), MediaBrowserCompat.MediaItem.FLAG_PLAYABLE));
@@ -65,7 +67,8 @@ public class MusicLibrary {
                         MediaMetadataCompat.METADATA_KEY_ALBUM,
                         MediaMetadataCompat.METADATA_KEY_ARTIST,
                         MediaMetadataCompat.METADATA_KEY_GENRE,
-                        MediaMetadataCompat.METADATA_KEY_TITLE
+                        MediaMetadataCompat.METADATA_KEY_TITLE,
+                        MediaMetadataCompat.METADATA_KEY_MEDIA_URI
                 }) {
             builder.putString(key, metadataWithoutBitmap.getString(key));
         }
@@ -97,6 +100,7 @@ public class MusicLibrary {
                         .putString(MediaMetadataCompat.METADATA_KEY_TITLE, title)
                         .putString(MediaMetadataCompat.METADATA_KEY_MEDIA_URI,mediaUrl)
                         .build());
+        Log.d("recievedURL",mediaUrl + " ");
 //        albumRes.put(mediaId, albumArtResId);
 //        musicFileName.put(mediaId, musicFilename);
     }

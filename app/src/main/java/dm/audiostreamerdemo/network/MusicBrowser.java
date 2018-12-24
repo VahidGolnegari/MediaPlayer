@@ -95,8 +95,8 @@ public class MusicBrowser {
             for (int i = 0; i < array.length(); i++) {
                 MediaMetaData infoData = new MediaMetaData();
                 JSONObject musicObj = array.getJSONObject(i);
-                MusicLibrary.createMediaMetadataCompat((
-                        musicObj.optString("id")),
+                MusicLibrary.createMediaMetadataCompat(
+                        musicObj.optString("id"),
                         musicObj.optString("title"),
                         musicObj.optString("artist"),
                         musicObj.optString("album"),
@@ -108,6 +108,7 @@ public class MusicBrowser {
                 infoData.setMediaTitle(musicObj.optString("title"));
                 infoData.setMediaArtist(musicObj.optString("artist"));
                 infoData.setMediaAlbum(musicObj.optString("album"));
+
                 infoData.setMediaUrl(musicObj.optString("site") + musicObj.optString("source"));
                 infoData.setMediaDuration(musicObj.optString("duration"));
                 listArticle.add(infoData);

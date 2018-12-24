@@ -483,7 +483,6 @@ public class MusicActivity extends AppCompatActivity implements  View.OnClickLis
 
 
             for (final MediaBrowserCompat.MediaItem mediaItem : children) {
-
                  mMediaControllerCompat.addQueueItem(mediaItem.getDescription());
             }
 

@@ -39,8 +39,6 @@ public class MediaBrowserService extends MediaBrowserServiceCompat implements Me
     private MediaMetadataCompat mCurrentMedia;
     private ServiceManager mServiceManager;
 
-
-
     @Override
     public void onCreate() {
         super.onCreate();
@@ -63,6 +61,11 @@ public class MediaBrowserService extends MediaBrowserServiceCompat implements Me
         return super.onStartCommand(intent, flags, startId);
     }
 
+    @Override
+    public void onTaskRemoved(Intent rootIntent) {
+        super.onTaskRemoved(rootIntent);
+        stopSelf();
+    }
 
     private void initialMediaPlayer() {
         mMediaPlayer = new MediaPlayer();
@@ -175,6 +178,11 @@ public class MediaBrowserService extends MediaBrowserServiceCompat implements Me
 
             final String mediaId = mPlaylist.get(mQueueIndex).getDescription().getMediaId();
             mPreparedMedia = MusicLibrary.getMetadata(MediaBrowserService.this, mediaId);
+            try {
+                Log.d("mediaUrl",mPreparedMedia.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_URI) + " ");
+            } catch (NullPointerException e) {
+                Log.d("mPreparedMedia_Url",e.getMessage()+ " ");
+            }
             mMediaCompat.setMetadata(mPreparedMedia);
 
             if (!mMediaCompat.isActive()) {
@@ -301,7 +309,7 @@ public class MediaBrowserService extends MediaBrowserServiceCompat implements Me
                 mServiceInStartedState = true;
             }
 
-            startForeground(mNotificationManager.NOTIFICATION_ID, notification);
+            startForeground(NotificationManager.NOTIFICATION_ID, notification);
         }
 
         private void updateNotificationForPause(PlaybackStateCompat state) {
@@ -310,7 +318,7 @@ public class MediaBrowserService extends MediaBrowserServiceCompat implements Me
                     mNotificationManager.getNotification(
                             mCurrentMedia , state, getSessionToken());
             mNotificationManager.getNotificationManager()
-                    .notify(mNotificationManager.NOTIFICATION_ID, notification);
+                    .notify(NotificationManager.NOTIFICATION_ID, notification);
         }
 
         private void moveServiceOutOfStartedState(PlaybackStateCompat state) {
@@ -323,9 +331,9 @@ public class MediaBrowserService extends MediaBrowserServiceCompat implements Me
     private void playFromMedia(MediaMetadataCompat media)  {
         mCurrentMedia = media;
         try {
-//            mMediaPlayer.prepare();
             Log.d("mediaUrl",media.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_URI));
             mMediaPlayer.setDataSource(media.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_URI));
+            mMediaPlayer.prepare();
             mMediaPlayer.start();
             setMediaPlaybackState(PlaybackStateCompat.STATE_PLAYING);
 
