@@ -19,7 +19,6 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.RelativeLayout;
 
-import com.nineoldandroids.view.ViewHelper;
 
 import dm.audiostreamerdemo.R;
 
@@ -84,7 +83,7 @@ public class Slider extends CustomView {
         else {
             this.value = value;
             float division = (ball.xFin - ball.xIni) / max;
-            ViewHelper.setX(ball, value * division + getHeight() / 2 - ball.getWidth() / 2);
+//            ViewHelper.setX(ball, value * division + getHeight() / 2 - ball.getWidth() / 2);
             ball.changeBackground();
         }
 
@@ -123,7 +122,7 @@ public class Slider extends CustomView {
                     float x = event.getX();
                     x = (x < ball.xIni) ? ball.xIni : x;
                     x = (x > ball.xFin) ? ball.xFin : x;
-                    ViewHelper.setX(ball, x);
+//                    ViewHelper.setX(ball, x);
                     ball.changeBackground();
 
                 } else {
@@ -181,7 +180,7 @@ public class Slider extends CustomView {
         if (press) {
             paint.setColor(backgroundColor);
             paint.setAntiAlias(true);
-            canvas.drawCircle(ViewHelper.getX(ball) + ball.getWidth() / 2, getHeight() / 2, getHeight() / 4, paint);
+//            canvas.drawCircle(ViewHelper.getX(ball) + ball.getWidth() / 2, getHeight() / 2, getHeight() / 4, paint);
         }
         invalidate();
     }
@@ -220,8 +219,8 @@ public class Slider extends CustomView {
     }
 
     private void placeBall() {
-        ViewHelper.setX(ball, getHeight() / 2 - ball.getWidth() / 2);
-        ball.xIni = ViewHelper.getX(ball);
+//        ViewHelper.setX(ball, getHeight() / 2 - ball.getWidth() / 2);
+//        ball.xIni = ViewHelper.getX(ball);
         ball.xFin = getWidth() - getHeight() / 2 - ball.getWidth() / 2;
         ball.xCen = getWidth() / 2 - ball.getWidth() / 2;
         placedBall = true;

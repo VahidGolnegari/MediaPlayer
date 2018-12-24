@@ -26,7 +26,6 @@ import android.view.ViewGroup;
 import android.view.accessibility.AccessibilityEvent;
 
 import dm.audiostreamerdemo.R;
-import com.nineoldandroids.view.animation.AnimatorProxy;
 
 public class SlidingUpPanelLayout extends ViewGroup {
 
@@ -1040,7 +1039,7 @@ public class SlidingUpPanelLayout extends ViewGroup {
 			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
 				mMainView.setTranslationY(mainViewOffset);
 			} else {
-				AnimatorProxy.wrap(mMainView).setTranslationY(mainViewOffset);
+//				AnimatorProxy.wrap(mMainView).setTranslationY(mainViewOffset);
 			}
 		}
 	}
@@ -1073,7 +1072,7 @@ public class SlidingUpPanelLayout extends ViewGroup {
 	@Override
 	protected boolean drawChild(Canvas canvas, View child, long drawingTime) {
 		boolean result;
-		final int save = canvas.save(Canvas.CLIP_SAVE_FLAG);
+		final int save = canvas.save();
 
 		if (mSlideableView != child) { // if main view
 			// Clip against the slider; no sense drawing what will immediately

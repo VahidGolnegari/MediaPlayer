@@ -7,7 +7,8 @@ package dm.audiostreamerdemo.network;
 
 import java.util.List;
 
-import dm.audiostreamer.MediaMetaData;
+import dm.audiostreamerdemo.util.MediaMetaData;
+
 
 public interface MusicLoaderListener {
 

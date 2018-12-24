@@ -33,33 +33,26 @@ import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.nostra13.universalimageloader.core.DisplayImageOptions;
-import com.nostra13.universalimageloader.core.ImageLoader;
-import com.nostra13.universalimageloader.core.assist.FailReason;
-import com.nostra13.universalimageloader.core.display.FadeInBitmapDisplayer;
-import com.nostra13.universalimageloader.core.listener.ImageLoadingListener;
-import com.nostra13.universalimageloader.core.listener.SimpleImageLoadingListener;
+
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-import dm.audiostreamer.AudioStreamingManager;
-import dm.audiostreamer.CurrentSessionCallback;
-import dm.audiostreamer.Logger;
-import dm.audiostreamer.MediaMetaData;
+
 import dm.audiostreamerdemo.R;
 import dm.audiostreamerdemo.adapter.AdapterMusic;
 import dm.audiostreamerdemo.network.MusicBrowser;
 import dm.audiostreamerdemo.network.MusicLoaderListener;
 import dm.audiostreamerdemo.service.MediaBrowserService;
 import dm.audiostreamerdemo.slidinguppanel.SlidingUpPanelLayout;
+import dm.audiostreamerdemo.util.MediaMetaData;
 import dm.audiostreamerdemo.widgets.LineProgress;
 import dm.audiostreamerdemo.widgets.PlayPauseView;
 import dm.audiostreamerdemo.widgets.Slider;
 
-public class MusicActivity extends AppCompatActivity implements CurrentSessionCallback, View.OnClickListener, Slider.OnValueChangedListener {
+public class MusicActivity extends AppCompatActivity implements  View.OnClickListener, Slider.OnValueChangedListener {
 
     private static final String TAG = MusicActivity.class.getSimpleName();
     private Context context;
@@ -88,12 +81,7 @@ public class MusicActivity extends AppCompatActivity implements CurrentSessionCa
     private RelativeLayout slideBottomView;
     private boolean isExpand = false;
 
-    private DisplayImageOptions options;
-    private ImageLoader imageLoader = ImageLoader.getInstance();
-    private ImageLoadingListener animateFirstListener = new AnimateFirstDisplayListener();
-
     //For  Implementation
-    private AudioStreamingManager streamingManager;
     private MediaMetaData currentSong;
     private List<MediaMetaData> listOfSongs = new ArrayList<MediaMetaData>();
 
@@ -154,82 +142,6 @@ public class MusicActivity extends AppCompatActivity implements CurrentSessionCa
     }
 
     @Override
-    public void updatePlaybackState(int state) {
-        Logger.e("updatePlaybackState: ", "" + state);
-        switch (state) {
-            case PlaybackStateCompat.STATE_PLAYING:
-                pgPlayPauseLayout.setVisibility(View.INVISIBLE);
-                btn_play.Play();
-                if (currentSong != null) {
-                    currentSong.setPlayState(PlaybackStateCompat.STATE_PLAYING);
-                    notifyAdapter(currentSong);
-                }
-                break;
-            case PlaybackStateCompat.STATE_PAUSED:
-                pgPlayPauseLayout.setVisibility(View.INVISIBLE);
-                btn_play.Pause();
-                if (currentSong != null) {
-                    currentSong.setPlayState(PlaybackStateCompat.STATE_PAUSED);
-                    notifyAdapter(currentSong);
-                }
-                break;
-            case PlaybackStateCompat.STATE_NONE:
-                currentSong.setPlayState(PlaybackStateCompat.STATE_NONE);
-                notifyAdapter(currentSong);
-                break;
-            case PlaybackStateCompat.STATE_STOPPED:
-                pgPlayPauseLayout.setVisibility(View.INVISIBLE);
-                btn_play.Pause();
-                audioPg.setValue(0);
-                if (currentSong != null) {
-                    currentSong.setPlayState(PlaybackStateCompat.STATE_NONE);
-                    notifyAdapter(currentSong);
-                }
-                break;
-            case PlaybackStateCompat.STATE_BUFFERING:
-                pgPlayPauseLayout.setVisibility(View.VISIBLE);
-                if (currentSong != null) {
-                    currentSong.setPlayState(PlaybackStateCompat.STATE_NONE);
-                    notifyAdapter(currentSong);
-                }
-                break;
-        }
-    }
-
-    @Override
-    public void playSongComplete() {
-        String timeString = "00.00";
-        time_total_bottom.setText(timeString);
-        time_total_slide.setText(timeString);
-        time_progress_bottom.setText(timeString);
-        time_progress_slide.setText(timeString);
-        lineProgress.setLineProgress(0);
-        audioPg.setValue(0);
-    }
-
-    @Override
-    public void currentSeekBarPosition(int progress) {
-        audioPg.setValue(progress);
-        setPGTime(progress);
-    }
-
-    @Override
-    public void playCurrent(int indexP, MediaMetaData currentAudio) {
-        showMediaInfo(currentAudio);
-        notifyAdapter(currentAudio);
-    }
-
-    @Override
-    public void playNext(int indexP, MediaMetaData CurrentAudio) {
-        showMediaInfo(CurrentAudio);
-    }
-
-    @Override
-    public void playPrevious(int indexP, MediaMetaData currentAudio) {
-        showMediaInfo(currentAudio);
-    }
-
-    @Override
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.btn_forward:
@@ -247,8 +159,7 @@ public class MusicActivity extends AppCompatActivity implements CurrentSessionCa
 
     @Override
     public void onValueChanged(int value) {
-        streamingManager.onSeekTo(value);
-        streamingManager.scheduleSeekBarUpdate();
+
     }
 
     private void notifyAdapter(MediaMetaData media) {
@@ -280,21 +191,8 @@ public class MusicActivity extends AppCompatActivity implements CurrentSessionCa
         audioPg.setValue(0);
         audioPg.setMin(0);
         audioPg.setMax(Integer.valueOf(media.getMediaDuration()) * 1000);
-        setPGTime(0);
         setMaxTime();
         loadSongDetails(media);
-    }
-
-    private void configAudioStreamer() {
-        streamingManager = AudioStreamingManager.getInstance(context);
-        //Set PlayMultiple 'true' if want to playing sequentially one by one songs
-        // and provide the list of songs else set it 'false'
-        streamingManager.setPlayMultiple(true);
-        streamingManager.setMediaList(listOfSongs);
-        //If you want to show the Player Notification then set ShowPlayerNotification as true
-        //and provide the pending intent so that after click on notification it will redirect to an activity
-        streamingManager.setShowPlayerNotification(true);
-        streamingManager.setPendingIntentAct(getNotificationPendingIntent());
     }
 
     private void uiInitialization() {
@@ -397,12 +295,6 @@ public class MusicActivity extends AppCompatActivity implements CurrentSessionCa
         });
         musicList.setAdapter(adapterMusic);
 
-        this.options = new DisplayImageOptions.Builder()
-                .showImageOnLoading(R.drawable.bg_default_album_art)
-                .showImageForEmptyUri(R.drawable.bg_default_album_art)
-                .showImageOnFail(R.drawable.bg_default_album_art).cacheInMemory(true)
-                .cacheOnDisk(true).considerExifParams(true)
-                .bitmapConfig(Bitmap.Config.RGB_565).build();
 
     }
 
@@ -429,16 +321,6 @@ public class MusicActivity extends AppCompatActivity implements CurrentSessionCa
         });
     }
 
-    private void checkAlreadyPlaying() {
-        if (streamingManager.isPlaying()) {
-            currentSong = streamingManager.getCurrentAudio();
-            if (currentSong != null) {
-                currentSong.setPlayState(streamingManager.mLastPlaybackState);
-                showMediaInfo(currentSong);
-                notifyAdapter(currentSong);
-            }
-        }
-    }
 
     private void loadSongDetails(MediaMetaData metaData) {
         text_songName.setText(metaData.getMediaTitle());
@@ -446,39 +328,8 @@ public class MusicActivity extends AppCompatActivity implements CurrentSessionCa
         txt_bottom_SongName.setText(metaData.getMediaTitle());
         txt_bottom_SongAlb.setText(metaData.getMediaArtist());
 
-        imageLoader.displayImage(metaData.getMediaArt(), image_songAlbumArtBlur, options, animateFirstListener);
-        imageLoader.displayImage(metaData.getMediaArt(), image_songAlbumArt, options, animateFirstListener);
-        imageLoader.displayImage(metaData.getMediaArt(), img_bottom_albArt, options, animateFirstListener);
     }
 
-    private static class AnimateFirstDisplayListener extends SimpleImageLoadingListener {
-
-        static final List<String> displayedImages = Collections.synchronizedList(new LinkedList<String>());
-
-        @Override
-        public void onLoadingStarted(String imageUri, View view) {
-            progressEvent(view, false);
-        }
-
-        @Override
-        public void onLoadingFailed(String imageUri, View view, FailReason failReason) {
-            progressEvent(view, true);
-        }
-
-        @Override
-        public void onLoadingComplete(String imageUri, View view, Bitmap loadedImage) {
-            if (loadedImage != null) {
-                ImageView imageView = (ImageView) view;
-                boolean firstDisplay = !displayedImages.contains(imageUri);
-                if (firstDisplay) {
-                    FadeInBitmapDisplayer.animate(imageView, 1000);
-                    displayedImages.add(imageUri);
-                }
-            }
-            progressEvent(view, true);
-        }
-
-    }
 
     private static void progressEvent(View v, boolean isShowing) {
         try {
@@ -491,23 +342,7 @@ public class MusicActivity extends AppCompatActivity implements CurrentSessionCa
         }
     }
 
-    private void setPGTime(int progress) {
-        try {
-            String timeString = "00.00";
-            int linePG = 0;
-            currentSong = streamingManager.getCurrentAudio();
-            if (currentSong != null && progress != Long.parseLong(currentSong.getMediaDuration())) {
-                timeString = DateUtils.formatElapsedTime(progress / 1000);
-                Long audioDuration = Long.parseLong(currentSong.getMediaDuration());
-                linePG = (int) (((progress / 1000) * 100) / audioDuration);
-            }
-            time_progress_bottom.setText(timeString);
-            time_progress_slide.setText(timeString);
-            lineProgress.setLineProgress(linePG);
-        } catch (NumberFormatException e) {
-            e.printStackTrace();
-        }
-    }
+
 
     private void setMaxTime() {
         try {
@@ -648,6 +483,7 @@ public class MusicActivity extends AppCompatActivity implements CurrentSessionCa
 
 
             for (final MediaBrowserCompat.MediaItem mediaItem : children) {
+
                  mMediaControllerCompat.addQueueItem(mediaItem.getDescription());
             }
 

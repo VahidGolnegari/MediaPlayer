@@ -31,7 +31,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.HttpsURLConnection;
 
-import dm.audiostreamer.MediaMetaData;
+import dm.audiostreamerdemo.util.MediaMetaData;
 import dm.audiostreamerdemo.util.MusicLibrary;
 
 public class MusicBrowser {

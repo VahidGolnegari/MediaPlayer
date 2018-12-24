@@ -76,7 +76,9 @@ public class MediaBrowserService extends MediaBrowserServiceCompat implements Me
         mMediaCompat = new MediaSessionCompat(getApplicationContext(), "Tag", mediaButtonReceiver, null);
         mMediaCompat.setCallback(IMediaCallback);
         mMediaCompat.setActive(true);
-        mMediaCompat.setFlags( MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS | MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS );
+        mMediaCompat.setFlags( MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS | MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS |
+                MediaSessionCompat.FLAG_HANDLES_QUEUE_COMMANDS
+        );
         Intent mediaButtonIntent = new Intent(Intent.ACTION_MEDIA_BUTTON);
         mediaButtonIntent.setClass(this, MediaButtonReceiver.class);
         PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, mediaButtonIntent, 0);
@@ -321,7 +323,7 @@ public class MediaBrowserService extends MediaBrowserServiceCompat implements Me
     private void playFromMedia(MediaMetadataCompat media)  {
         mCurrentMedia = media;
         try {
-            mMediaPlayer.prepare();
+//            mMediaPlayer.prepare();
             Log.d("mediaUrl",media.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_URI));
             mMediaPlayer.setDataSource(media.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_URI));
             mMediaPlayer.start();

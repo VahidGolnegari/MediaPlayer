@@ -22,28 +22,20 @@ import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.nostra13.universalimageloader.core.DisplayImageOptions;
-import com.nostra13.universalimageloader.core.ImageLoader;
-import com.nostra13.universalimageloader.core.assist.FailReason;
-import com.nostra13.universalimageloader.core.display.FadeInBitmapDisplayer;
-import com.nostra13.universalimageloader.core.listener.ImageLoadingListener;
-import com.nostra13.universalimageloader.core.listener.SimpleImageLoadingListener;
+
 
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-import dm.audiostreamer.MediaMetaData;
 import dm.audiostreamerdemo.R;
+import dm.audiostreamerdemo.util.MediaMetaData;
 
 public class AdapterMusic extends BaseAdapter {
     private List<MediaMetaData> musicList;
     private Context mContext;
     private LayoutInflater inflate;
 
-    private DisplayImageOptions options;
-    private ImageLoader imageLoader = ImageLoader.getInstance();
-    private ImageLoadingListener animateFirstListener = new AnimateFirstDisplayListener();
 
     private ColorStateList colorPlay;
     private ColorStateList colorPause;
@@ -54,12 +46,7 @@ public class AdapterMusic extends BaseAdapter {
         this.inflate = LayoutInflater.from(context);
         this.colorPlay = ColorStateList.valueOf(context.getResources().getColor(R.color.md_black_1000));
         this.colorPause = ColorStateList.valueOf(context.getResources().getColor(R.color.md_blue_grey_500_75));
-        this.options = new DisplayImageOptions.Builder()
-                .showImageOnLoading(R.drawable.bg_default_album_art)
-                .showImageForEmptyUri(R.drawable.bg_default_album_art)
-                .showImageOnFail(R.drawable.bg_default_album_art).cacheInMemory(true)
-                .cacheOnDisk(true).considerExifParams(true)
-                .bitmapConfig(Bitmap.Config.RGB_565).build();
+
     }
 
     public void refresh(List<MediaMetaData> musicList) {
@@ -126,7 +113,6 @@ public class AdapterMusic extends BaseAdapter {
         mViewHolder.MediaDesc.setText(media.getMediaArtist());
         mViewHolder.playState.setImageDrawable(getDrawableByState(mContext, media.getPlayState()));
         String mediaArt = media.getMediaArt();
-        imageLoader.displayImage(mediaArt, mViewHolder.mediaArt, options, animateFirstListener);
 
         convertView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -171,34 +157,6 @@ public class AdapterMusic extends BaseAdapter {
     }
 
 
-    private class AnimateFirstDisplayListener extends SimpleImageLoadingListener {
-
-        final List<String> displayedImages = Collections.synchronizedList(new LinkedList<String>());
-
-        @Override
-        public void onLoadingStarted(String imageUri, View view) {
-            progressEvent(view, false);
-        }
-
-        @Override
-        public void onLoadingFailed(String imageUri, View view, FailReason failReason) {
-            progressEvent(view, true);
-        }
-
-        @Override
-        public void onLoadingComplete(String imageUri, View view, Bitmap loadedImage) {
-            if (loadedImage != null) {
-                ImageView imageView = (ImageView) view;
-                boolean firstDisplay = !displayedImages.contains(imageUri);
-                if (firstDisplay) {
-                    FadeInBitmapDisplayer.animate(imageView, 200);
-                    displayedImages.add(imageUri);
-                }
-            }
-            progressEvent(view, true);
-        }
-
-    }
 
     private static void progressEvent(View v, boolean isShowing) {
         try {
