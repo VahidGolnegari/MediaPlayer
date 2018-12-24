@@ -12,10 +12,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.RemoteException;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.MediaMetadataCompat;
+import android.support.v4.media.session.MediaButtonReceiver;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -96,7 +100,9 @@ public class MusicActivity extends AppCompatActivity implements CurrentSessionCa
     //
     private MediaBrowserCompat mMediaBrowserCompat;
     private MediaControllerCompat mMediaControllerCompat;
+    private MediaSubscribtionCallback IMediaSessionCallback;
     private boolean isMediaConnected = false;
+    private int mCurrentState;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -105,17 +111,19 @@ public class MusicActivity extends AppCompatActivity implements CurrentSessionCa
 
         this.context = MusicActivity.this;
 
+        IMediaSessionCallback = new MediaSubscribtionCallback();
+
+        mCurrentState =  PlaybackStateCompat.STATE_NONE;
+
         mMediaBrowserCompat = new MediaBrowserCompat(this, new ComponentName(this, MediaBrowserService.class),
-                mMediaBrowserCompatConnectionCallback, getIntent().getExtras());
-
+                mMediaBrowserCompatConnectionCallback, null);
         mMediaBrowserCompat.connect();
-
-
-
 //        configAudioStreamer();
         uiInitialization();
         loadMusicData();
     }
+
+
 
     @Override
     public void onBackPressed() {
@@ -132,36 +140,16 @@ public class MusicActivity extends AppCompatActivity implements CurrentSessionCa
     @Override
     public void onStart() {
         super.onStart();
-        try {
-            if (streamingManager != null) {
-                streamingManager.subscribesCallBack(this);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+
     }
 
     @Override
     public void onStop() {
-        try {
-            if (streamingManager != null) {
-                streamingManager.unSubscribeCallBack();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
         super.onStop();
     }
 
     @Override
     protected void onDestroy() {
-        try {
-            if (streamingManager != null) {
-                streamingManager.unSubscribeCallBack();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
         super.onDestroy();
     }
 
@@ -245,15 +233,14 @@ public class MusicActivity extends AppCompatActivity implements CurrentSessionCa
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.btn_forward:
-                streamingManager.onSkipToNext();
+                mMediaControllerCompat.getTransportControls().skipToNext();
                 break;
             case R.id.btn_backward:
-                streamingManager.onSkipToPrevious();
+                mMediaControllerCompat.getTransportControls().skipToPrevious();
                 break;
             case R.id.btn_play:
-                if (currentSong != null) {
                     playPauseEvent(view);
-                }
+
                 break;
         }
     }
@@ -269,16 +256,18 @@ public class MusicActivity extends AppCompatActivity implements CurrentSessionCa
     }
 
     private void playPauseEvent(View v) {
-        if (streamingManager.isPlaying()) {
-            streamingManager.onPause();
+        if (mCurrentState == PlaybackStateCompat.STATE_PLAYING) {
+            mMediaControllerCompat.getTransportControls().pause();
             ((PlayPauseView) v).Pause();
         } else {
-            streamingManager.onPlay(currentSong);
+            mMediaControllerCompat.getTransportControls().play();
             ((PlayPauseView) v).Play();
         }
+
     }
 
     private void playSong(MediaMetaData media) {
+
 
 //        if (streamingManager != null) {
 //            streamingManager.onPlay(media);
@@ -555,15 +544,20 @@ public class MusicActivity extends AppCompatActivity implements CurrentSessionCa
         public void onConnected() {
             super.onConnected();
             isMediaConnected = true;
-            Log.d("musicBrowserConnected","true");
             try {
                 mMediaControllerCompat = new MediaControllerCompat(MusicActivity.this, mMediaBrowserCompat.getSessionToken());
                 mMediaControllerCompat.registerCallback(mMediaControllerCompatCallback);
+                mMediaBrowserCompat.subscribe(mMediaBrowserCompat.getRoot(),IMediaSessionCallback);
+                Log.d("musicBrowserConnected","true");
+
 
             } catch( RemoteException e ) {
+                Log.d("mediaBrwConnection","ExEPTION " + e.getMessage());
 
             }
         }
+
+
     };
 
     private MediaControllerCompat.Callback mMediaControllerCompatCallback = new MediaControllerCompat.Callback() {
@@ -573,20 +567,42 @@ public class MusicActivity extends AppCompatActivity implements CurrentSessionCa
             super.onPlaybackStateChanged(state);
 
             switch (state.getState()) {
-
-                case PlaybackStateCompat.STATE_PAUSED:
-
-                    break;
-
                 case PlaybackStateCompat.STATE_PLAYING:
-
+                    pgPlayPauseLayout.setVisibility(View.INVISIBLE);
+                    btn_play.Play();
+                    if (currentSong != null) {
+                        currentSong.setPlayState(PlaybackStateCompat.STATE_PLAYING);
+                        notifyAdapter(currentSong);
+                    }
                     break;
-
+                case PlaybackStateCompat.STATE_PAUSED:
+                    pgPlayPauseLayout.setVisibility(View.INVISIBLE);
+                    btn_play.Pause();
+                    if (currentSong != null) {
+                        currentSong.setPlayState(PlaybackStateCompat.STATE_PAUSED);
+                        notifyAdapter(currentSong);
+                    }
+                    break;
+                case PlaybackStateCompat.STATE_NONE:
+                    currentSong.setPlayState(PlaybackStateCompat.STATE_NONE);
+                    notifyAdapter(currentSong);
+                    break;
                 case PlaybackStateCompat.STATE_STOPPED:
-
+                    pgPlayPauseLayout.setVisibility(View.INVISIBLE);
+                    btn_play.Pause();
+                    audioPg.setValue(0);
+                    if (currentSong != null) {
+                        currentSong.setPlayState(PlaybackStateCompat.STATE_NONE);
+                        notifyAdapter(currentSong);
+                    }
                     break;
-
-
+                case PlaybackStateCompat.STATE_BUFFERING:
+                    pgPlayPauseLayout.setVisibility(View.VISIBLE);
+                    if (currentSong != null) {
+                        currentSong.setPlayState(PlaybackStateCompat.STATE_NONE);
+                        notifyAdapter(currentSong);
+                    }
+                    break;
             }
 
         }
@@ -599,4 +615,45 @@ public class MusicActivity extends AppCompatActivity implements CurrentSessionCa
 
 
     };
+
+    private MediaBrowserCompat.SubscriptionCallback IMediaSubscriptionCallback = new MediaBrowserCompat.SubscriptionCallback() {
+        @Override
+        public void onChildrenLoaded(@NonNull String parentId, @NonNull List<MediaBrowserCompat.MediaItem> children, @NonNull Bundle options) {
+            Log.d("onChildren","Loaded");
+            Log.d("onChildrenSize",children.size() + " ");
+
+            for (final MediaBrowserCompat.MediaItem mediaItem : children) {
+                mMediaControllerCompat.addQueueItem(mediaItem.getDescription());
+            }
+
+            // Call prepare now so pressing play just works.
+            mMediaControllerCompat.getTransportControls().prepare();
+
+        }
+
+        @Override
+        public void onError(@NonNull String parentId, @NonNull Bundle options) {
+            super.onError(parentId, options);
+            Log.d("onSubscriptionError","error");
+
+        }
+    };
+
+    private class MediaSubscribtionCallback extends MediaBrowserCompat.SubscriptionCallback {
+
+        @Override
+        public void onChildrenLoaded(@NonNull String parentId, @NonNull List<MediaBrowserCompat.MediaItem> children) {
+            Log.d("onChildren","Loaded");
+            Log.d("onChildrenSize",children.size() + " ");
+
+
+            for (final MediaBrowserCompat.MediaItem mediaItem : children) {
+                 mMediaControllerCompat.addQueueItem(mediaItem.getDescription());
+            }
+
+            // Call prepare now so pressing play just works.
+            mMediaControllerCompat.getTransportControls().prepare();
+
+        }
+    }
 }

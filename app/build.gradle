@@ -1,11 +1,12 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 26
-    defaultConfig {
+    compileSdkVersion 28
+    buildToolsVersion '28.0.3'
+defaultConfig {
         applicationId "dm.audiostreamerdemo"
         minSdkVersion 16
-        targetSdkVersion 25
+        targetSdkVersion 28
         versionCode 4
         versionName "1.0.3"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"

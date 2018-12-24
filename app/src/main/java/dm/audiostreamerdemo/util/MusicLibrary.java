@@ -4,7 +4,6 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.support.v4.BuildConfig;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.MediaMetadataCompat;
 
@@ -25,10 +24,10 @@ public class MusicLibrary {
         return "root";
     }
 
-    private static String getAlbumArtUri(String albumArtResName) {
-        return ContentResolver.SCHEME_ANDROID_RESOURCE + "://" +
-                BuildConfig.APPLICATION_ID + "/drawable/" + albumArtResName;
-    }
+//    private static String getAlbumArtUri(String albumArtResName) {
+//        return ContentResolver.SCHEME_ANDROID_RESOURCE + "://" +
+//                BuildConfig.APPLICATION_ID + "/drawable/" + albumArtResName;
+//    }
 
     public static String getMusicFilename(String mediaId) {
         return musicFileName.containsKey(mediaId) ? musicFileName.get(mediaId) : null;

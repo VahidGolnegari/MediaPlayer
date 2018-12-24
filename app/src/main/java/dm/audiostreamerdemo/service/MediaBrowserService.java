@@ -37,6 +37,7 @@ public class MediaBrowserService extends MediaBrowserServiceCompat implements Me
     private NotificationManager mNotificationManager;
     private boolean mServiceInStartedState = false;
     private MediaMetadataCompat mCurrentMedia;
+    private ServiceManager mServiceManager;
 
 
 
@@ -46,6 +47,8 @@ public class MediaBrowserService extends MediaBrowserServiceCompat implements Me
 
         mNotificationManager = new NotificationManager(this);
 
+        mServiceManager = new ServiceManager();
+
         initialMediaPlayer();
 
         initialMediaSession();
@@ -54,11 +57,16 @@ public class MediaBrowserService extends MediaBrowserServiceCompat implements Me
 
     }
 
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        MediaButtonReceiver.handleIntent(mMediaCompat, intent);
+        return super.onStartCommand(intent, flags, startId);
+    }
+
 
     private void initialMediaPlayer() {
         mMediaPlayer = new MediaPlayer();
         mMediaPlayer.setVolume(1.0f,1.0f);
-
 
     }
 
@@ -67,8 +75,8 @@ public class MediaBrowserService extends MediaBrowserServiceCompat implements Me
         ComponentName mediaButtonReceiver = new ComponentName(getApplicationContext(), MediaButtonReceiver.class);
         mMediaCompat = new MediaSessionCompat(getApplicationContext(), "Tag", mediaButtonReceiver, null);
         mMediaCompat.setCallback(IMediaCallback);
+        mMediaCompat.setActive(true);
         mMediaCompat.setFlags( MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS | MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS );
-
         Intent mediaButtonIntent = new Intent(Intent.ACTION_MEDIA_BUTTON);
         mediaButtonIntent.setClass(this, MediaButtonReceiver.class);
         PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, mediaButtonIntent, 0);
@@ -80,7 +88,6 @@ public class MediaBrowserService extends MediaBrowserServiceCompat implements Me
     private void registerNoisyBroadcast() {
         IntentFilter noisyIntentFilter = new IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY);
         registerReceiver(noisyBroadCastReciver,noisyIntentFilter);
-
     }
 
 
@@ -92,9 +99,8 @@ public class MediaBrowserService extends MediaBrowserServiceCompat implements Me
 
     @Override
     public void onLoadChildren(@NonNull String parentId, @NonNull Result<List<MediaBrowserCompat.MediaItem>> result) {
+        Log.d("onBefreLoadChild",MusicLibrary.getMediaItems().size() + " ");
         result.sendResult(MusicLibrary.getMediaItems());
-
-
     }
 
     @Override
@@ -159,6 +165,7 @@ public class MediaBrowserService extends MediaBrowserServiceCompat implements Me
 
         @Override
         public void onPrepare() {
+            Log.d("mQueeIndex",mQueueIndex + " " );
             if (mQueueIndex < 0 && mPlaylist.isEmpty()) {
                 // Nothing to play.
                 return;
@@ -170,7 +177,9 @@ public class MediaBrowserService extends MediaBrowserServiceCompat implements Me
 
             if (!mMediaCompat.isActive()) {
                 mMediaCompat.setActive(true);
-            }        }
+            }
+            Log.d("mediaSession","onPrepare");
+        }
 
         @Override
         public void onPlay() {
@@ -182,9 +191,10 @@ public class MediaBrowserService extends MediaBrowserServiceCompat implements Me
             mMediaCompat.setActive(true);
 
             if (mPreparedMedia == null) {
+                Log.d("mPreparedMedia","isNull");
                 onPrepare();
             }
-
+            Log.d("mSessoinCallBack","onPlay");
             playFromMedia(mPreparedMedia);
 
         }
@@ -193,6 +203,8 @@ public class MediaBrowserService extends MediaBrowserServiceCompat implements Me
         @Override
         public void onPause() {
             mMediaPlayer.pause();
+            setMediaPlaybackState(PlaybackStateCompat.STATE_PAUSED);
+
         }
 
         @Override
@@ -223,7 +235,11 @@ public class MediaBrowserService extends MediaBrowserServiceCompat implements Me
             onPlay();
         }
 
+        @Override
+        public void onPlayFromMediaId(String mediaId, Bundle extras) {
+            super.onPlayFromMediaId(mediaId, extras);
 
+        }
     }
 
 
@@ -255,6 +271,17 @@ public class MediaBrowserService extends MediaBrowserServiceCompat implements Me
         }
         playbackstateBuilder.setState(state, PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 0);
         mMediaCompat.setPlaybackState(playbackstateBuilder.build());
+        switch (state) {
+            case PlaybackStateCompat.STATE_PAUSED:
+                mServiceManager.updateNotificationForPause(playbackstateBuilder.build());
+                break;
+            case PlaybackStateCompat.STATE_PLAYING:
+                mServiceManager.moveServiceToStartedState(playbackstateBuilder.build());
+                break;
+            case PlaybackStateCompat.STATE_STOPPED:
+                mServiceManager.moveServiceOutOfStartedState(playbackstateBuilder.build());
+                break;
+        }
     }
 
 
@@ -293,13 +320,17 @@ public class MediaBrowserService extends MediaBrowserServiceCompat implements Me
 
     private void playFromMedia(MediaMetadataCompat media)  {
         mCurrentMedia = media;
-        mMediaPlayer.prepareAsync();
         try {
+            mMediaPlayer.prepare();
+            Log.d("mediaUrl",media.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_URI));
             mMediaPlayer.setDataSource(media.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_URI));
+            mMediaPlayer.start();
+            setMediaPlaybackState(PlaybackStateCompat.STATE_PLAYING);
+
         } catch (IOException e) {
             e.printStackTrace();
+            Log.d("playMediaExp",e.getMessage() + " ");
             mMediaPlayer.release();
-
 
         }
 
