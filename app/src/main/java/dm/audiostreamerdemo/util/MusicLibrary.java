@@ -34,6 +34,12 @@ public class MusicLibrary {
         return musicFileName.containsKey(mediaId) ? musicFileName.get(mediaId) : null;
     }
 
+    public static String getMusicUrl(String mediaId) {
+        return musicFileName.containsKey(mediaId) ? musicFileName.get(mediaId) : null;
+    }
+
+
+
     private static int getAlbumRes(String mediaId) {
         return albumRes.containsKey(mediaId) ? albumRes.get(mediaId) : 0;
     }

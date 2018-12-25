@@ -21,6 +21,7 @@ import android.util.Log;
 import dm.audiostreamerdemo.R;
 import dm.audiostreamerdemo.activity.MusicActivity;
 import dm.audiostreamerdemo.service.MediaBrowserService;
+import dm.audiostreamerdemo.service.MusicService;
 
 public class NotificationManager {
 
@@ -30,7 +31,7 @@ public class NotificationManager {
     private static final String CHANNEL_ID = "GapMediaPlayer";
     private static final int REQUEST_CODE = 501;
 
-    private final MediaBrowserService mService;
+    private final MusicService mService;
 
     private final NotificationCompat.Action mPlayAction;
     private final NotificationCompat.Action mPauseAction;
@@ -38,7 +39,7 @@ public class NotificationManager {
     private final NotificationCompat.Action mPrevAction;
     private final android.app.NotificationManager mNotificationManager;
 
-    public NotificationManager(MediaBrowserService service) {
+    public NotificationManager(MusicService service) {
         mService = service;
 
         mNotificationManager =
